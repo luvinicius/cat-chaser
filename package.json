@@ -1,0 +1,9 @@
+{
+    "author": "Lucas Vinicius Pimenta",
+    "name":"cat-chaser",
+    "description": "It's a endless runner made with p5.js",
+    "homepage": "",
+    "version": "1.0.0",
+    "license": "GNU GENERAL PUBLIC LICENSE",
+    "main": "index.js"
+}
