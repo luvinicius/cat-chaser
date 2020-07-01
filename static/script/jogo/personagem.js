@@ -1,37 +1,52 @@
-class Personagem extends Character {
+class Personagem extends mix(Body2D).with(StateMachine, DrawableMachine) {
+  constructor(world) {
+    super(world,
+      new ScreenLayer2D(world.screen,
+        /*x*/ 0, /*y*/ 10,
+        /*width*/ world.screen.width / 5,
+        /*height*/ world.screen.height / 5,
+        /*layer*/ LAYERS.PERSONAGEM, /*scale*/ 1,
+        /*orientation*/ Orientation2D.BOTTOM_LEFT),
+      /*weight*/ 10,
+      /*facing*/ Direction2D.RIGHT);
 
-  constructor(canvas, somDoPulo) {
-    super(new Box(0, 10, width / 5, height / 5, DRAW_STRATING_POINT.BOTTOM_LEFT));
-    this.weight = 10;
+    const IMG_CROP = 512;
 
-    let animacaoCorrendo = UpdatableFames2D.cropImage(Box.from(this), canvas, 1, 10, 512, 512);
-    
-    this.add(STATES.RUNNING, State.DO_NOTHING, animacaoCorrendo);
+    let animacaoCorrendo = FramesFactory.cropDrawable(
+      /*layerInfo*/         this.layerInfo,
+      /*drawableResource*/  resources[IMGS.PERSONAGEM],
+      /*nlines*/ 1,           /*ncolumns*/ 10,
+      /*cropWidth*/ IMG_CROP, /*cropHeight*/ IMG_CROP,
+      /*nframes*/undefined,   /*startingFrame*/1);
 
-    let stopedDraw = new CropedFrame2D(Box.from(this), canvas, 512, 512, 1, 1);
-    
-    let jumppingState = new State(()=>{if (this.speedUp <= 0) { this.changeTo(STATES.FALLING);}});
-    this.add(STATES.JUMPPING, jumppingState, stopedDraw);
+    this.addDrawable(STATES.RUNNING, animacaoCorrendo);
 
-    let estadoCaindo = new State(aplicarGravidade);
-    this.add(STATES.FALLING, estadoCaindo, stopedDraw);
-    this.add(STATES.DAMAGE_FALLING, estadoCaindo, stopedDraw);
+    let imagemParado = new CropedFrame2D(
+      /*layerInfo*/         this.layerInfo,
+      /*drawableResource*/  resources[IMGS.PERSONAGEM],
+      /*cropWidth*/ IMG_CROP, /*cropHeight*/ IMG_CROP,
+      /*line*/ 0,             /*column*/ 0);
 
-    this.add(STATES.DAMAGE, estadoCorrendo, stopedDraw);
+    this.addStateHandler(STATES.JUMPPING, () => { if (this.speedUp <= 0) this.changeTo(STATES.FALLING); });
+
+    this.addDrawable(STATES.JUMPPING, imagemParado);
+    this.addDrawable(STATES.FALLING, imagemParado);
+    this.addDrawable(STATES.DAMAGE_FALLING, imagemParado);
+    this.addDrawable(STATES.DAMAGE, imagemParado);
 
     this.foot = 10;
     this.nJumps = 0;
-    this.somDoPulo = somDoPulo;
+    this.somDoPulo = resources[SOUNDS.PULO];
   }
 
   pula() {
     if (this.in(STATES.RUNNING, STATES.JUMPPING, STATES.FALLING) && this.nJumps < 2) {
       this.changeTo(STATES.JUMPPING);
       this.nJumps++;
-      somDoPulo.play();
+      this.somDoPulo.play();
 
       let jumpForce = this.weight * 5;
-      if (this.is(STATES.RUNNING)) jumpForce += world.gravityForceFor(this);
+      if (this.is(STATES.RUNNING)) jumpForce += this.world.gravityForceFor(this);
       this.pullUp(jumpForce);
     }
   }
@@ -41,18 +56,13 @@ class Personagem extends Character {
     else this.changeTo(STATES.DAMAGE);
   }
 
-  caiNoChao() {
-    this.land();
+  land() {
+    super.land();
     this.changeTo(STATES.RUNNING);
     this.nJumps = 0;
   }
 
-  estaColidindo(body) {
-    const precisao = .7;
-
-    return collideRectRect(
-      this.trueX, this.trueY, this.width * precisao, this.height * precisao,
-      body.trueX, body.trueY, body.width * precisao, body.height * precisao,
-    );
+  colide(body) {
+    // TODO
   }
 }

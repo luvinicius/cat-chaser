@@ -4,10 +4,10 @@ class Orientation2D {
         this._attachedToTop = attachedToTop;
         this._attachedToLeft = attachedToLeft;
     }
-    get attachedToTop() { return this.attachedToTop; }
-    get attachedToBottom() { return !this.attachedToTop; }
-    get attachedToLeft() { return this.attachedToLeft; }
-    get attachedToRight() { return !this.attachedToLeft; }
+    get attachedToTop() { return this._attachedToTop; }
+    get attachedToBottom() { return !this._attachedToTop; }
+    get attachedToLeft() { return this._attachedToLeft; }
+    get attachedToRight() { return !this._attachedToLeft; }
 }
 
 Orientation2D.TOP_LEFT = new Orientation2D(true, true);
@@ -87,7 +87,7 @@ class Layer2D {
 
     get orientation() { return this._orientation; }
 
-    get scale() { return this.scale.value; }
+    get scale() { return this._scale.value; }
     set scale(scale) {
         if (typeof (scale) == "number") {
             this._scale.value = scale;
@@ -115,65 +115,13 @@ class Layer2D {
     get attachedToLeft() { return this.orientation.attachedToLeft; }
     get attachedToRight() { return this.orientation.attachedToRight; }
 
-    
+
     get trueX() { return this.x; }
     set trueX(x) { this.x = x; }
 
-    
+
     get trueY() { return this.y; }
     set trueY(y) { this.y = y; }
-
-    get topY() { return this.trueY; }
-    get bottomY() { return this.trueY + this.trueHeight; }
-    get leftX() { return this.trueX; }
-    get rightX() { return this.trueX + this.trueWidth; }
-}
-
-class ScreenLayer2D extends Layer2D {
-    constructor(screen, x, y, width, height, layer = undefined, scale = undefined, orientation = undefined, position, size) {
-        super(x, y, width, height, position, size);
-
-        if (_validate(this, " constructor").expectParameter("screen", screen).toBeInstanceOf(Screen2D)) {
-            this._screen = screen;
-        }
-
-        if (layer) {
-            if (typeof (layer) == "number") {
-                this._layer = new LayerPosition(layer);
-            } else if (_validate(this, " constructor").expectParameter("layer", layer).toBeInstanceOf(LayerPosition)) {
-                this._layer = layer;
-            }
-        }
-
-        if (scale) {
-            if (typeof (scale) == "number") {
-                this._scale = new Scale2D(scale);
-            } else if (_validate(this, " constructor").expectParameter("scale", scale).toBeInstanceOf(Scale2D)) {
-                this._scale = scale;
-            }
-        }
-
-        if (orientation) {
-            if (_validate(this, " constructor").expectParameter("orientation", orientation).toBeInstanceOf(Orientation2D)) {
-                this._orientation = orientation;
-            }
-        }
-    }
-
-    get screen() { return this._screen; }
-    set screen(screen) {
-        if (_validate(this, " constructor").expectParameter("screen", screen).toBeInstanceOf(Screen2D)) {
-            this._layer = layer;
-        }
-    }
-
-    get splitX() { return (this.screen.width - (this.trueWidth + this.x)); }
-    get trueX() { return this.attachedToLeft ? this.x : this.splitX; }
-    set trueX(x) { this.x = this._attachedToLeft ? x : this.screen.width - (x + this.trueWidth); }
-
-    get splitY() { return (this.screen.height - (this.trueHeight + this.y)); }
-    get trueY() { return this.attachedToTop ? this.y : this.splitY; }
-    set trueY(y) { this.y = this._attachedToTop ? y : this.screen.height - (y + this.trueHeight) }
 
     get topY() { return this.trueY; }
     get bottomY() { return this.trueY + this.trueHeight; }
@@ -205,6 +153,6 @@ class Layer2DFactory {
     }
 
     static fromScreen(screen, layer = undefined) {
-        return new Layer2D(screen, 0, 0, screen.width, screen.height, layer);
+        return new Layer2D(0, 0, screen.width, screen.height, layer);
     }
 }

@@ -1,6 +1,8 @@
 
-class Paralax2D extends mix(Object).width(Drawable, Updatable) {
-  constructor(world, frameList, direction, speed = undefined) {
+class Paralax2D extends mix(Object).with(Drawable, Updatable) {
+  constructor(world, layer, frameList, direction, speed = undefined) {
+    super();
+    this.layer = layer;
     if (_validate(this, " constructor")
       .expectParameter("world", world)
       .toBeInstanceOf(WorldGame2D)) {
@@ -16,7 +18,7 @@ class Paralax2D extends mix(Object).width(Drawable, Updatable) {
       .toBeInstanceOf(Direction2D)) {
       this.direction = direction;
 
-      for (index in this.frameList) {
+      for (let index in this.frameList) {
         if (direction.in(Direction2D.FRONT, Direction2D.BACK)) {
           let frame = this.frameList[index];
           frame.layer.inicitialScale = frame.layer.scale;
@@ -24,7 +26,7 @@ class Paralax2D extends mix(Object).width(Drawable, Updatable) {
       }
     }
 
-    this.speed = speed ? speed : 1;
+    this._speed = speed ? speed : 1;
 
   }
 
@@ -34,36 +36,36 @@ class Paralax2D extends mix(Object).width(Drawable, Updatable) {
 
   updateFrame(frame) {
     if (!frame.position instanceof RelativePosition2D) {
-      if (direction.is(Direction2D.UP)) {
+      if (this.direction.is(Direction2D.UP)) {
         frame.layer.trueY -= this.speed;
       }
-      if (direction.is(Direction2D.DOWN)) {
+      if (this.direction.is(Direction2D.DOWN)) {
         frame.layer.trueY += this.speed;
       }
 
 
-      if (direction.is(Direction2D.LEFT)) {
+      if (this.direction.is(Direction2D.LEFT)) {
         frame.layer.trueX -= this.speed;
       }
-      if (direction.is(Direction2D.RIGHT)) {
+      if (this.direction.is(Direction2D.RIGHT)) {
         frame.layer.trueX += this.speed;
       }
     }
-    if (direction.is(Direction2D.FRONT)) {
+    if (this.direction.is(Direction2D.FRONT)) {
       frame.layer.scale += this.speed;
       if (frame.layer.width > this.screen.width
         && frame.layer.height > this.screen.height) {
         frame.layer.scale = frame.layer.inicitialScale;
       }
     }
-    if (direction.is(Direction2D.BACK)) {
+    if (this.direction.is(Direction2D.BACK)) {
       frame.layer.scale -= this.speed;
       if (frame.layer.scale < 0) frame.layer.scale = frame.layer.inicitialScale;
     }
   }
 
   update() {
-    for (index in this.frameList) {
+    for (let index in this.frameList) {
       this.updateFrame(this.frameList[index]);
     }
   }
@@ -76,12 +78,12 @@ class Paralax2D extends mix(Object).width(Drawable, Updatable) {
 
 
 class Floor2D extends Updatable(GameObject2D) {
-  constructor(world, layer, stepSpeed) {
-    super(world, layer);
+  constructor(world, layerInfo, stepSpeed) {
+    super(world, layerInfo);
     this._stepSpeed = stepSpeed;
   }
 
-  get stepSpeed() { return world.speed + this._stepSpeed; }
+  get stepSpeed() { return jogo.speed + this._stepSpeed; }
 
   isAbove(entity) {
 
@@ -99,14 +101,15 @@ class Floor2D extends Updatable(GameObject2D) {
 
 
 
-class Scenary2D extends DrawableStateMachine(GameObject2D) {
-  constructor(layer) {
-    super(layer);
+class Scenary2D extends mix(GameObject2D).with(Updatable, Drawable) {
+  constructor(world) {
+    super(world, Layer2DFactory.fromScreen(world.screen));
     this._paralax = [];
     this._floors = [];
     this._entities = [];
     this._applyGravity = [];
     this._checkColisions = [];
+    this._drawEntities = [];
   }
 
   pushParalax(paralax) {
@@ -121,22 +124,22 @@ class Scenary2D extends DrawableStateMachine(GameObject2D) {
   }
 
   pushEntity(entity) {
-    _validate(this, ".pushEntity").expectParameter("entity", entity).toBeInstanceOf(DrawableStateMachine);
-    ExpectedInstance.expect(this, entity, DrawableStateMachine, ".pushEntity must recieve a entity that implements Entity");
+    _validate(this, ".pushEntity").expectParameter("entity", entity).toBeInstanceOf(Updatable);
+
     if (!this._entities.includes(entity)) this._entities.push(entity);
     return this;
   }
 
   applyGravity(body) {
-    _validate(this, ".applyGravity").expectParameter("body", body).toBeInstanceOf(Body);
-    ExpectedInstance.expect(this, body, Body, ".applyGravity must recieve a body that implements Body");
+    _validate(this, ".applyGravity").expectParameter("body", body).toBeInstanceOf(Body2D);
+
     this.pushEntity(body);
     this._applyGravity.push(body);
     return this;
   }
 
   checkColisions(body) {
-    _validate(this, ".applyGravity").expectParameter("body", body).toBeInstanceOf(Body);
+    _validate(this, ".applyGravity").expectParameter("body", body).toBeInstanceOf(Body2D);
     this.pushEntity(body);
     this._checkColisions.push(body);
     return this;
@@ -145,13 +148,15 @@ class Scenary2D extends DrawableStateMachine(GameObject2D) {
   getFlowBellow(entity) { return this._floors.filter(floor => floor.isBellow(entity))[0]; }
 
   update() {
-    for (background in this._paralax) { background.update(); }
-    for (floor in this._floors) { floor.update(); }
-    for (entity in this._entities) {
+    this._paralax.forEach(paralax => paralax.update());
+    this._floors.forEach(floor => floor.update());
+    for (let i in this._entities) {
+      let entity = this._entities[i];
+
       if (this._applyGravity.includes(entity)) {
         let floorBellow = this.getFlowBellow(entity);
         if (!floorBellow || entity.trueY > floorBellow.topY) {
-          mundo.applyGravity(entity);
+          this.world.applyGravity(entity);
           if (floorBellow && entity.trueY <= floorBellow.topY) {
             entity.land(floorBellow);
           }
@@ -159,9 +164,11 @@ class Scenary2D extends DrawableStateMachine(GameObject2D) {
       }
 
       if (this._checkColisions.includes(entity)) {
-
-        for (other in this._entities) {
-          if (other != entity && entity.isColliding(other) && entity.colide instanceof Function) {
+        for (let j in this._entities) {
+          let other = this._entities[j];
+          if (other != entity && other instanceof Body2D
+            && entity.isColliding(other)
+            && entity.colide instanceof Function) {
             entity.colide(other);
           }
         }
@@ -170,10 +177,15 @@ class Scenary2D extends DrawableStateMachine(GameObject2D) {
     }
   }
 
-  draw() {
-    for (background in this._paralax) { background.draw(); }
-    for (floor in this._floors) { floor.draw(); }
-    for (entity in this._entities) { entity.draw(); }
+  draw(entity = undefined) {
+    if (entity) {
+      _validate(this, ".draw").expectParameter("entity", entity).toBeInstanceOf(Drawable);
+      this._drawEntities.push(entity);
+    } else {
+      this._paralax.forEach(paralax => paralax.draw());
+      this._floors.forEach(floor => floor.draw());
+      this._drawEntities.forEach(entity => entity.draw());
+    }
+
   }
 }
-

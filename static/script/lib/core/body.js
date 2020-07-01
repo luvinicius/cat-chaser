@@ -1,6 +1,6 @@
 class Body2D extends GameObject2D {
-    constructor(world, layer, weight, facing = undefined) {
-        super(world, layer);
+    constructor(world, layerInfo, weight, facing = undefined) {
+        super(world, layerInfo);
 
         this.weight = weight;
 
@@ -56,7 +56,7 @@ class Body2D extends GameObject2D {
     }
     pull(force) { this.pullTo(force, this.facing); }
 
-    apllyForces() {
+    applyForces() {
         if (this._speedDown != 0) this.trueY += this._speedDown;
         if (this._speedRight != 0) this.trueX += this._speedRight;
         if (this._speedScale != 0) {
@@ -65,14 +65,14 @@ class Body2D extends GameObject2D {
             this.scale += this._speedScale;
             this.layer += this._speedScale;
         }
-        
+
         if (this.scale < 0) this.scale = 0;
 
         if (this.rightX < 0) this.getOutOfScreen(Direction2D.LEFT);
         if (this.leftX > this.screen.width) this.getOutOfScreen(Direction2D.RIGHT);
         if (this.bottomY < 0) this.getOutOfScreen(Direction2D.UP);
         if (this.topY > this.screen.height) this.getOutOfScreen(Direction2D.BOTTOM);
-        
+
         if (this.scale == 0) this.getOutOfScreen(Direction2D.BACK);
         if (this.width > this.screen.width && this.height > this.screen.height) {
             this.getOutOfScreen(Direction2D.FRONT);
@@ -89,7 +89,7 @@ class Body2D extends GameObject2D {
     }
 
     update() {
-        this.apllyForces();
+        this.applyForces();
         super.update();
     }
 
@@ -99,4 +99,6 @@ class Body2D extends GameObject2D {
             body.trueX, body.trueY, body.trueWidth * body.collisionPrecision, body.trueHeight * body.collisionPrecision,
         );
     }
+
+    colide(body) { }
 }

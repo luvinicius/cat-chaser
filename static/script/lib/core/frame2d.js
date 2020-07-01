@@ -1,10 +1,12 @@
 class Frame2D extends Drawable(Object) {
 
-    constructor(layer, drawableResource, delay = undefined) {
+    constructor(layerInfo,
+        drawableResource,
+        delay = undefined) {
         super();
-        _validate(this, " constructor").expectParameter("layer", layer).toBeInstanceOf(Layer2D);
+        _validate(this, " constructor").expectParameter("layer", layerInfo).toBeInstanceOf(Layer2D);
         _validate(this, " constructor").expectParameter("drawableResource", drawableResource).toBeInstanceOf(AbsDrawableResource);
-        this._layer = layer;
+        this._layer = layerInfo;
         this._drawableResource = drawableResource;
         this.delay = delay ? delay : 1;
     }
@@ -25,10 +27,10 @@ class Frame2D extends Drawable(Object) {
 }
 
 class CropedFrame2D extends Frame2D {
-    constructor(layer, canvas,
+    constructor(layerInfo, drawableResource,
         cropWidth, cropHeight, nline, ncolumn,
         delay = undefined) {
-        super(layer, canvas, delay);
+        super(layerInfo, drawableResource, delay);
         this.cropWidth = cropWidth;
         this.cropHeight = cropHeight;
         this.cropX = ncolumn * cropWidth;
@@ -41,8 +43,8 @@ class CropedFrame2D extends Frame2D {
 }
 
 class FramesFactory {
-    static cropDrawable(layer, drawableResource, nlines, ncolumns, cropWidth, cropHeight, nframes = undefined, startingFrame = undefined, defaultFrameDelay = undefined, finishHandler = undefined) {
-        _validate(FramesFactory, ".cropImage").expectParameter("layer", layer).toBeInstanceOf(Layer2D);
+    static cropDrawable(layerInfo, drawableResource, nlines, ncolumns, cropWidth, cropHeight, nframes = undefined, startingFrame = undefined, defaultFrameDelay = undefined, finishHandler = undefined) {
+        _validate(FramesFactory, ".cropImage").expectParameter("layerInfo", layerInfo).toBeInstanceOf(Layer2D);
         _validate(FramesFactory, ".cropImage").expectParameter("drawableResource", drawableResource).toBeInstanceOf(AbsDrawableResource);
         let frames = new Fames2DAnimation(defaultFrameDelay, finishHandler);
 
@@ -58,7 +60,7 @@ class FramesFactory {
                 let currentFrame = line * ncolumns + column + 1;
                 if (currentFrame > startingFrame) {
                     let frame = new CropedFrame2D(
-                        layer, drawableResource,
+                        layerInfo, drawableResource,
                         cropWidth, cropHeight, line, column,
                         frames.defaultFrameDelay
                     );
@@ -86,10 +88,6 @@ class FramesFactory {
 }
 
 class Frame2DList extends Drawable(Array) {
-    constructor() {
-        super();
-    }
-
     push(frame) {
         _validate(this, " .add").expectParameter("frame", frame).toBeInstanceOf(Frame2D);
         super.push(frame);
@@ -108,13 +106,6 @@ class Frame2DList extends Drawable(Array) {
             frame.layer.position.y += ypad;
         }
         this.push(frame);
-    }
-
-    getRelativeTo(frame) {
-        let relatives = [];
-        this.forEach(frame => { frame.draw(); });
-
-        return relatives;
     }
 
     get last() {
@@ -151,7 +142,7 @@ class Fames2DAnimation extends Updatable(Frame2DList) {
             this._frameIndex++;
             this._timeInFrame = 0;
 
-            if (this._frameIndex >= this._frames.length - 1) {
+            if (this._frameIndex >= this.length - 1) {
                 if (this.finishHandler instanceof Function) this.finishHandler();
                 this._frameIndex = 0;
             }

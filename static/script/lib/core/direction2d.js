@@ -1,5 +1,5 @@
 class Direction2D {
-    constructor(description, degree, ...composition = undefined, freezedDegree = undefined) {
+    constructor(description, degree, freezedDegree = undefined, ...composition) {
         this._degree = degree;
         if (composition) {
             composition.forEach(direction => {
@@ -23,7 +23,7 @@ class Direction2D {
 
     is(direction) {
         if (this._composition) {
-            for (i in this._composition) {
+            for (let i in this._composition) {
                 if (this._composition[i] === direction) return true;
             }
             return false;
@@ -36,7 +36,7 @@ class Direction2D {
     }
 
     in(...direction) {
-        for (index in direction) if (this.is(direction[index])) return true;
+        for (let index in direction) if (this.is(direction[index])) return true;
         return false;
     }
 }
@@ -61,7 +61,7 @@ class Direction2DFactory {
         return new Direction2D("BACK", degree, freezedDegree);
     }
     static composedBy(...directions) {
-        return new Direction2D(undefined, 0, directions);
+        return new Direction2D(undefined, 0, false, directions);
     }
 }
 

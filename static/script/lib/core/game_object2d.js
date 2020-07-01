@@ -1,9 +1,9 @@
 class GameObject2D {
-    constructor(world, layer) {
+    constructor(world, layerInfo) {
         _validate(this, " constructor").expectParameter("world", world).toBeInstanceOf(WorldGame2D);
-        _validate(this, " constructor").expectParameter("layer", layer).toBeInstanceOf(Layer2D);
+        _validate(this, " constructor").expectParameter("layerInfo", layerInfo).toBeInstanceOf(Layer2D);
         this._world = world;
-        this._layerInfo = layer;
+        this._layerInfo = layerInfo;
     }
 
     get world() { return this._world; }

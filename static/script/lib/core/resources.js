@@ -1,20 +1,14 @@
-
-
 class Resources {
-    constructor() {
-        this._resources = {};
-    }
     put(name, resource) {
         _validate(this, ".put").expectParameter("resource", resource).toBeInstanceOf(Resource);
         resource.name = name;
-        this._resources[name] == resource;
+        
+        this[name] = resource;
     }
 
-    get(name) { return this._resources[name]; }
-
-    draw(name) { this.get(name).draw(); }
-    play(name) { this.get(name).play(); }
-    loop(name) { this.get(name).loop(); }
+    draw(name) { this[name].draw(); }
+    play(name) { this[name].play(); }
+    loop(name) { this[name].loop(); }
 }
 class Resource {
     constructor(content) {

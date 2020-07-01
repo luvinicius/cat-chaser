@@ -1,14 +1,14 @@
-class Screen2D extends Layer2D {
-  constructor(width, height, orientation = Orientation2D.DEFAULT) {
-    super(0, 0, width, height, orientation, undefined, undefined);
+class Screen2D extends Size2D {
+  constructor(width, height) {
+    super(width, height);
   }
 }
 
 class WorldGame2D {
-  constructor(screen) { 
+  constructor(screen) {
     this.screen = screen;
-    this._gravity = 1; 
-    this.speedingUp = 0; 
+    this._gravity = 1;
+    this.speedingUp = 0;
     this._speed = this.screen.width / 250;
   }
 
@@ -21,9 +21,53 @@ class WorldGame2D {
     return speed + this.speedingUp;
   }
 
-  set speed(stepSpeed) { this._speed = stepSpeed; }
+  set speed(speed) {
+    if (this.scenary) {
+      this.scenary.speed = speed;
+    } else {
+      this._speed = stepSpeed;
+    }
+  }
 
   get gravity() { return this._gravity; }
   set gravity(gravity) { this._gravity = gravity; }
-}
 
+  update() {
+    if (this.menu) this.menu.update();
+    else if (this.scenary) this.scenary.update();
+  }
+
+  draw() {
+    if (this.scenary) this.scenary.draw();
+    if (this.menu) this.menu.update();
+
+  }
+
+  resume(scenary = undefined) { if (scenary) this.scenary = scenary; }
+  stop() { }
+  pause(menu, resume_scenary = false) {
+    this.stop();
+    this.menu = menu;
+    if (resume_scenary) {
+      this.scenary = undefined;
+    }
+  }
+  game_over(menu, resume_scenary = false) {
+    this.stop();
+    this.menu = menu;
+    if (resume_scenary) {
+      this.scenary = undefined;
+    }
+  }
+  end(menu, resume_scenary = false) {
+    this.stop();
+    this.menu = menu;
+    if (resume_scenary) {
+      this.scenary = undefined;
+    }
+  }
+
+  quit() {
+    this.stop();
+  }
+}
